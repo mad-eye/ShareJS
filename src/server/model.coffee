@@ -501,6 +501,13 @@ module.exports = Model = (db, options) ->
         refreshReapingTimeout docName
         callback? error, newVersion
 
+  @updateCursor = (docName, sessionId, cursorData, callback)->
+    load docName, (error, doc) ->
+      return callback error if error
+      doc.cursors ||= {}
+      doc.cursors[sessionId] = cursorData
+      doc.eventEmitter.emit "cursor", sessionId, cursorData
+
   # TODO: store (some) metadata in DB
   # TODO: op and meta should be combineable in the op that gets sent
   @applyMetaOp = (docName, metaOpData, callback) ->
@@ -562,6 +569,11 @@ module.exports = Model = (db, options) ->
       else # Version is null / undefined. Just add the listener.
         doc.eventEmitter.on 'op', listener
         callback? null, doc.v
+
+  @listenCursor = (docName, listener) ->
+    load docName, (error, doc)->
+      return callback? error if error
+      doc.eventEmitter.on "cursor", listener
 
   # Remove a listener for a particular document.
   #

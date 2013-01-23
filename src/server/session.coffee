@@ -60,6 +60,8 @@ exports.handler = (session, createAgent) ->
     # We'll only handle one message from each client at a time.
     handleMessage = (query) ->
 
+      console.log query
+
       error = null
       error = 'Invalid docName' unless query.doc is null or typeof query.doc is 'string' or (query.doc is undefined and lastReceivedDoc)
       error = "'create' must be true or missing" unless query.create in [true, undefined]
@@ -108,6 +110,7 @@ exports.handler = (session, createAgent) ->
 
         else if query.cursor?
           # Ignore cursor queries for now.
+          updateCursor query, callback
           callback()
 
         else
@@ -124,6 +127,7 @@ exports.handler = (session, createAgent) ->
     # Send a message to the socket.
     # msg _must_ have the doc:DOCNAME property set. We'll remove it if its the same as lastReceivedDoc.
     send = (response) ->
+      console.log "RESPONSE", response
       if response.doc is lastSentDoc
         delete response.doc
       else
@@ -162,6 +166,12 @@ exports.handler = (session, createAgent) ->
       agent.listen docName, version, listener, (error, v) ->
         delete docState[docName].listener if error
         callback error, v
+
+      agent.listenCursor docName, (sessionId, cursor)->
+        console.log "sending cursor change"
+        message = {}
+        message[sessionId] = cursor["cursor"]
+        send {cursor: message}
 
     # Close the named document.
     # callback([error])
@@ -290,6 +300,15 @@ exports.handler = (session, createAgent) ->
           send {doc:query.doc, open:false}
 
         callback()
+
+    updateCursor = (query, callback) ->
+      console.log "UPDATE"
+      cursorData = {v: query.v, cursor: query.cursor}
+      console.log "cursor data is #{JSON.stringify(cursorData)}"
+      console.log "query is #{JSON.stringify(query)}"
+      agent.updateCursor query.doc, cursorData, (error, cursor)->
+        console.log "updated cursor", cursor
+      callback()
 
     # We received an op from the socket
     handleOp = (query, callback) ->

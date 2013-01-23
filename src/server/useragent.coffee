@@ -103,6 +103,11 @@ module.exports = (model, options) ->
         @doAuth {docName, meta:opData.meta}, 'submit meta', callback, =>
           model.applyMetaOp docName, opData, callback
 
+    updateCursor: (docName, cursorData, callback) ->
+      #TODO add doAuth logic
+      model.updateCursor docName, @sessionId, cursorData
+      callback null, response
+
     # Delete the named operation.
     # Callback is passed (deleted?, error message)
     delete: (docName, callback) ->
@@ -131,6 +136,11 @@ module.exports = (model, options) ->
               delete @listeners[docName]
 
             callback? error, v
+
+   
+    listenCursor: (docName, listener, callback) ->
+      model.listenCursor docName, (sessionId, cursor) ->
+        listener(sessionId, cursor) unless sessionId == @sessionId
 
     removeListener: (docName) ->
       throw new Error 'Document is not open' unless @listeners[docName]
