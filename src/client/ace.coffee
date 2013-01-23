@@ -28,6 +28,20 @@ rangeToCursor = (editorDoc, range) ->
   end = offset + range.end.row
   [start, end]
 
+cursorToRange = (editorDoc, cursor) ->
+  cursor = cursor[1] if cursor instanceof Array
+  lines = editorDoc.$lines
+  offset = 0
+  for line, i in lines
+    if offset + line.length < cursor
+      offset += line.length + 1 # +1 for newline
+    else
+      row = i
+      column = cursor - offset 
+      range = new Range()
+      range.cursor = {row: row, column: column}
+      return range
+
 
 # Convert an ace delta into an op understood by share.js
 applyToShareJS = (editorDoc, delta, doc) ->
@@ -85,8 +99,17 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   # to prevent an infinite typing loop.
   suppress = false
   
-  @on "cursors", ->
-    console.log "updating cursors", @cursors
+  updateCursors = ->
+    ranges = []
+    _.each @cursors, (cursor) ->
+      range = cursorToRange(editorDoc, cursor)
+      ranges.push range
+    ranges.push cursor: null #need this for the user's own cursor
+
+    editor.session.$selectionMarkers = ranges
+    editor.renderer.$cursorLayer.update(editor.renderer.layerConfig)
+
+  @on "cursors", updateCursors
 
   # Listen for edits in ace
   editorListener = (change) ->
@@ -103,6 +126,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     doc.setCursor selectionRange
 
   editorDoc.on 'change', editorListener
+  editorDoc.on 'change', updateCursors
   editor.on "changeSelection", cursorListener
 
   # Listen for remote ops on the sharejs document
