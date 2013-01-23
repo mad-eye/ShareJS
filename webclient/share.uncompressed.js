@@ -874,6 +874,7 @@
         if (typeof useSockJS !== "undefined" && useSockJS !== null) {
           msg = JSON.parse(msg.data);
         }
+        console.log("RECEIVED MESSAGE", msg);
         if (msg.auth === null) {
           _this.lastError = msg.error;
           _this.disconnect();
@@ -944,6 +945,7 @@
       if (typeof useSockJS !== "undefined" && useSockJS !== null) {
         data = JSON.stringify(data);
       }
+      console.log("sending data", data);
       return this.socket.send(data);
     };
 
