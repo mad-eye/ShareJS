@@ -2,27 +2,38 @@
 
 Range = require("ace/range").Range
 
+rangeToCursor = (editorDoc, range) ->
+  lines = editorDoc.$lines
+
+  offset = 0
+  for line, i in lines
+    offset += if i < range.start.row
+      line.length
+    else
+      range.start.column
+    break if range.start.row == i
+
+  # Add the row number to include newlines.
+  start = offset + range.start.row
+
+  offset = 0
+  for line, i in lines
+    offset += if i < range.end.row
+      line.length
+    else
+      range.end.column
+    break if range.end.row == i
+
+  # Add the row number to include newlines.
+  end = offset + range.end.row
+  [start, end]
+
+
 # Convert an ace delta into an op understood by share.js
 applyToShareJS = (editorDoc, delta, doc) ->
   # Get the start position of the range, in no. of characters
-  getStartOffsetPosition = (range) ->
-    # This is quite inefficient - getLines makes a copy of the entire
-    # lines array in the document. It would be nice if we could just
-    # access them directly.
-    lines = editorDoc.getLines 0, range.start.row
-      
-    offset = 0
 
-    for line, i in lines
-      offset += if i < range.start.row
-        line.length
-      else
-        range.start.column
-
-    # Add the row number to include newlines.
-    offset + range.start.row
-
-  pos = getStartOffsetPosition(delta.range)
+  pos = rangeToCursor(editorDoc, delta.range)[0]
 
   switch delta.action
     when 'insertText' then doc.insert pos, delta.text
@@ -74,14 +85,25 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   # to prevent an infinite typing loop.
   suppress = false
   
+  @on "cursors", ->
+    console.log "updating cursors", @cursors
+
   # Listen for edits in ace
   editorListener = (change) ->
     return if suppress
     applyToShareJS editorDoc, change.data, doc
-
+    updateCursors()
     check()
 
+  cursorListener = (change) ->
+    currentSelection = editor.getSelectionRange()
+    selectionRange = rangeToCursor editorDoc, currentSelection
+#    TODO uncomment this line
+#    see what kind of responses come back by modifying connection.coffee
+    doc.setCursor selectionRange
+
   editorDoc.on 'change', editorListener
+  editor.on "changeSelection", cursorListener
 
   # Listen for remote ops on the sharejs document
   docListener = (op) ->
