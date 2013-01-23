@@ -302,10 +302,7 @@ exports.handler = (session, createAgent) ->
         callback()
 
     updateCursor = (query, callback) ->
-      console.log "UPDATE"
       cursorData = {v: query.v, cursor: query.cursor}
-      console.log "cursor data is #{JSON.stringify(cursorData)}"
-      console.log "query is #{JSON.stringify(query)}"
       agent.updateCursor query.doc, cursorData, (error, cursor)->
         console.log "updated cursor", cursor
       callback()
