@@ -106,7 +106,7 @@ module.exports = (model, options) ->
     updateCursor: (docName, cursorData, callback) ->
       #TODO add doAuth logic
       model.updateCursor docName, @sessionId, cursorData
-      callback null, response
+#      callback null, response
 
     # Delete the named operation.
     # Callback is passed (deleted?, error message)
@@ -139,7 +139,7 @@ module.exports = (model, options) ->
 
    
     listenCursor: (docName, listener, callback) ->
-      model.listenCursor docName, (sessionId, cursor) ->
+      model.listenCursor docName, (sessionId, cursor) =>
         listener(sessionId, cursor) unless sessionId == @sessionId
 
     removeListener: (docName) ->
