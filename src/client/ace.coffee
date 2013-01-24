@@ -101,9 +101,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   
   updateCursors = ->
     ranges = []
-    _.each @cursors, (cursor) ->
-      range = cursorToRange(editorDoc, cursor)
-      ranges.push range
+    ranges.push cursorToRange(editorDoc, cursor) for own sessionId, cursor of @cursors
     ranges.push cursor: null #need this for the user's own cursor
 
     editor.session.$selectionMarkers = ranges
