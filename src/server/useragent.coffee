@@ -105,8 +105,8 @@ module.exports = (model, options) ->
 
     updateCursor: (docName, cursorData, callback) ->
       #TODO add doAuth logic
-      model.updateCursor docName, @sessionId, cursorData
-#      callback null, response
+      model.updateCursor docName, @sessionId, cursorData, (error) ->
+        callback? error
 
     # Delete the named operation.
     # Callback is passed (deleted?, error message)

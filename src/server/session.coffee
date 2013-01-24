@@ -1,6 +1,6 @@
 # This implements the network API for ShareJS.
 #
-# The wire protocol is speccced out here:
+# The wire protocol is specced out here:
 # https://github.com/josephg/ShareJS/wiki/Wire-Protocol
 #
 # When a client connects the server first authenticates it and sends:
@@ -109,9 +109,7 @@ exports.handler = (session, createAgent) ->
           handleOp query, callback
 
         else if query.cursor?
-          # Ignore cursor queries for now.
           updateCursor query, callback
-          callback()
 
         else
           console.warn "Invalid query #{JSON.stringify query} from #{agent.sessionId}"
@@ -303,9 +301,9 @@ exports.handler = (session, createAgent) ->
 
     updateCursor = (query, callback) ->
       cursorData = {v: query.v, cursor: query.cursor}
-      agent.updateCursor query.doc, cursorData, (error, cursor)->
-        console.log "updated cursor", cursor
-      callback()
+      agent.updateCursor query.doc, cursorData, (error)->
+        console.error error if error
+        callback(error)
 
     # We received an op from the socket
     handleOp = (query, callback) ->
