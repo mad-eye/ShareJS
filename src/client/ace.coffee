@@ -113,7 +113,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   editorListener = (change) ->
     return if suppress
     applyToShareJS editorDoc, change.data, doc
-    updateCursors()
+    updateCursors.call(doc)
     check()
 
   cursorListener = (change) ->
@@ -124,7 +124,6 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     doc.setCursor selectionRange
 
   editorDoc.on 'change', editorListener
-  editorDoc.on 'change', updateCursors
   editor.on "changeSelection", cursorListener
 
   # Listen for remote ops on the sharejs document
