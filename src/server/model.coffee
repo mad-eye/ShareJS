@@ -509,6 +509,7 @@ module.exports = Model = (db, options) ->
       data = {}
       data[sessionId] = cursorData
       doc.eventEmitter.emit "cursor", {cursor: data, meta: {source: sessionId}}
+      console.log "emitting event", {cursor: data, meta: {source: sessionId}}
       callback null
 
   # TODO: store (some) metadata in DB
@@ -574,6 +575,12 @@ module.exports = Model = (db, options) ->
         doc.eventEmitter.on 'op', listener
         doc.eventEmitter.on 'cursor', listener
         callback? null, doc.v
+
+      if doc.cursors
+        for sessionId, data of doc.cursors
+          cursorData = {}
+          cursorData[sessionId] = data
+          doc.eventEmitter.emit "cursor", {cursor: cursorData, meta: {source: sessionId}}
 
   # Remove a listener for a particular document.
   #
