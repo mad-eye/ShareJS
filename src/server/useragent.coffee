@@ -136,12 +136,7 @@ module.exports = (model, options) ->
               delete @listeners[docName]
 
             callback? error, v
-
-   
-    listenCursor: (docName, listener, callback) ->
-      model.listenCursor docName, (sessionId, cursor) =>
-        listener(sessionId, cursor) unless sessionId == @sessionId
-
+  
     removeListener: (docName) ->
       throw new Error 'Document is not open' unless @listeners[docName]
       model.removeListener docName, @listeners[docName]

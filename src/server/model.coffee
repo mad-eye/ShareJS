@@ -506,7 +506,9 @@ module.exports = Model = (db, options) ->
       return callback error if error
       doc.cursors ||= {}
       doc.cursors[sessionId] = cursorData
-      doc.eventEmitter.emit "cursor", sessionId, cursorData
+      data = {}
+      data[sessionId] = cursorData
+      doc.eventEmitter.emit "cursor", {cursor: data, meta: {source: sessionId}}
       callback null
 
   # TODO: store (some) metadata in DB
@@ -559,6 +561,7 @@ module.exports = Model = (db, options) ->
           return callback? error if error
 
           doc.eventEmitter.on 'op', listener
+          doc.eventEmitter.on 'cursor', listener
           callback? null, version
           for op in data
             listener op
@@ -569,12 +572,8 @@ module.exports = Model = (db, options) ->
 
       else # Version is null / undefined. Just add the listener.
         doc.eventEmitter.on 'op', listener
+        doc.eventEmitter.on 'cursor', listener
         callback? null, doc.v
-
-  @listenCursor = (docName, listener) ->
-    load docName, (error, doc)->
-      return callback? error if error
-      doc.eventEmitter.on "cursor", listener
 
   # Remove a listener for a particular document.
   #

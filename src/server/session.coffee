@@ -152,6 +152,9 @@ exports.handler = (session, createAgent) ->
         # Skip the op if this socket sent it.
         return if opData.meta.source is agent.sessionId
 
+        if opData.cursor
+          return send {cursor: opData.cursor}
+
         opMsg =
           doc: docName
           op: opData.op
@@ -164,12 +167,6 @@ exports.handler = (session, createAgent) ->
       agent.listen docName, version, listener, (error, v) ->
         delete docState[docName].listener if error
         callback error, v
-
-      agent.listenCursor docName, (sessionId, cursor)->
-        console.log "sending cursor change"
-        message = {}
-        message[sessionId] = cursor["cursor"]
-        send {cursor: message}
 
     # Close the named document.
     # callback([error])
@@ -300,8 +297,7 @@ exports.handler = (session, createAgent) ->
         callback()
 
     updateCursor = (query, callback) ->
-      cursorData = {v: query.v, cursor: query.cursor}
-      agent.updateCursor query.doc, cursorData, (error)->
+      agent.updateCursor query.doc, query.cursor, (error)->
         console.error error if error
         callback(error)
 
