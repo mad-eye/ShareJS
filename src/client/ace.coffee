@@ -105,7 +105,11 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     ranges.push cursor: null #need this for the user's own cursor
 
     editor.session.$selectionMarkers = ranges
-    editor.renderer.$cursorLayer.update(editor.renderer.layerConfig)
+    cursorLayer = editor.renderer.$cursorLayer
+    cursorLayer.update(editor.renderer.layerConfig)
+    colors = ["Brown", "DarkCyan", "DarkGreen", "DarkRed", "DarkSeaGreen", "MediumSlateBlue"]
+    for cursorElement,i  in cursorLayer.cursors[1..]
+      cursorElement.style.borderColor = colors[i%6]
 
   @on "cursors", updateCursors
 
@@ -119,8 +123,6 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   cursorListener = (change) ->
     currentSelection = editor.getSelectionRange()
     selectionRange = rangeToCursor editorDoc, currentSelection
-#    TODO uncomment this line
-#    see what kind of responses come back by modifying connection.coffee
     doc.setCursor selectionRange
 
   editorDoc.on 'change', editorListener
