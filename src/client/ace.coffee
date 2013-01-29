@@ -106,8 +106,10 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
 
     editor.session.$selectionMarkers = ranges
     cursorLayer = editor.renderer.$cursorLayer
+    #rerender
     cursorLayer.update(editor.renderer.layerConfig)
     colors = ["Brown", "DarkCyan", "DarkGreen", "DarkRed", "DarkSeaGreen", "MediumSlateBlue"]
+    #color all the other users' cursors
     for cursorElement,i  in cursorLayer.cursors[1..]
       cursorElement.style.borderColor = colors[i%6]
 
