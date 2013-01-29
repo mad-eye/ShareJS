@@ -59,9 +59,6 @@ exports.handler = (session, createAgent) ->
 
     # We'll only handle one message from each client at a time.
     handleMessage = (query) ->
-
-      console.log query
-
       error = null
       error = 'Invalid docName' unless query.doc is null or typeof query.doc is 'string' or (query.doc is undefined and lastReceivedDoc)
       error = "'create' must be true or missing" unless query.create in [true, undefined]
@@ -125,7 +122,6 @@ exports.handler = (session, createAgent) ->
     # Send a message to the socket.
     # msg _must_ have the doc:DOCNAME property set. We'll remove it if its the same as lastReceivedDoc.
     send = (response) ->
-      console.log "RESPONSE", response
       if response.doc is lastSentDoc
         delete response.doc
       else

@@ -504,12 +504,11 @@ module.exports = Model = (db, options) ->
   @updateCursor = (docName, sessionId, cursorData, callback)->
     load docName, (error, doc) ->
       return callback error if error
-      doc.cursors ||= {}
+      doc.cursors ?= {}
       doc.cursors[sessionId] = cursorData
       data = {}
       data[sessionId] = cursorData
       doc.eventEmitter.emit "cursor", {cursor: data, meta: {source: sessionId}}
-      console.log "emitting event", {cursor: data, meta: {source: sessionId}}
       callback null
 
   # TODO: store (some) metadata in DB

@@ -46,7 +46,6 @@ class Connection
     @socket.onmessage = (msg) =>
       msg = JSON.parse(msg.data) if useSockJS?
 
-      console.log "RECEIVED MESSAGE", msg
       if msg.auth is null
         # Auth failed.
         @lastError = msg.error # 'forbidden'
@@ -112,7 +111,6 @@ class Connection
 
     #console.warn 'c->s', data
     data = JSON.stringify(data) if useSockJS?
-    console.log "sending data", data
     @socket.send data
 
   disconnect: ->
