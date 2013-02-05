@@ -592,6 +592,7 @@ module.exports = Model = (db, options) ->
     throw new Error 'removeListener called but document not loaded' unless doc
 
     doc.eventEmitter.removeListener 'op', listener
+    doc.eventEmitter.removeListener 'cursor', listener
     refreshReapingTimeout docName
 
   # Flush saves all snapshot data to the database. I'm not sure whether or not this is actually needed -
