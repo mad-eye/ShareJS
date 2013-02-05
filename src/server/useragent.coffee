@@ -139,7 +139,7 @@ module.exports = (model, options) ->
   
     removeListener: (docName) ->
       throw new Error 'Document is not open' unless @listeners[docName]
-      model.removeListener docName, @listeners[docName]
+      model.removeListener docName, @listeners[docName], @sessionId
       delete @listeners[docName]
 
   # Finally, return a function which takes client data and returns an authenticated useragent object

@@ -583,14 +583,17 @@ module.exports = Model = (db, options) ->
 
   # Remove a listener for a particular document.
   #
-  # removeListener(docName, listener)
+  # removeListener(docName, listener, sessionId)
   #
   # This is synchronous.
-  @removeListener = (docName, listener) ->
+  @removeListener = (docName, listener, sessionId) ->
     # The document should already be loaded.
     doc = docs[docName]
+    delete doc.cursors[sessionId]
+    cursorData = {}
+    cursorData[sessionId] = null
     throw new Error 'removeListener called but document not loaded' unless doc
-
+    doc.eventEmitter.emit "cursor", {cursor: cursorData, meta: {source: sessionId}}
     doc.eventEmitter.removeListener 'op', listener
     doc.eventEmitter.removeListener 'cursor', listener
     refreshReapingTimeout docName
