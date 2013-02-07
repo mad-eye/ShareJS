@@ -589,7 +589,7 @@ module.exports = Model = (db, options) ->
   @removeListener = (docName, listener, sessionId) ->
     # The document should already be loaded.
     doc = docs[docName]
-    delete doc.cursors[sessionId]
+    delete doc.cursors[sessionId] if doc.cursors
     cursorData = {}
     cursorData[sessionId] = null
     throw new Error 'removeListener called but document not loaded' unless doc
