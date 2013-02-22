@@ -69,6 +69,7 @@ applyToShareJS = (editorDoc, delta, doc) ->
 # with the document's contents unless keepEditorContents is true. (In which case the document's
 # contents are nuked and replaced with the editor's).
 window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
+  @editorAttached = true
   throw new Error 'Only text documents can be attached to ace' unless @provides['text']
 
   doc = this
@@ -167,6 +168,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     check()
 
   doc.detach_ace = ->
+    @editorAttached = false
     doc.removeListener 'remoteop', docListener
     editorDoc.removeListener 'change', editorListener
     #TODO remove cursor listener here
