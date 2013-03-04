@@ -589,14 +589,16 @@ module.exports = Model = (db, options) ->
   @removeListener = (docName, listener, sessionId) ->
     # The document should already be loaded.
     doc = docs[docName]
-    delete doc.cursors[sessionId] if doc.cursors
-    cursorData = {}
-    cursorData[sessionId] = null
     throw new Error 'removeListener called but document not loaded' unless doc
-    doc.eventEmitter.emit "cursor", {cursor: cursorData, meta: {source: sessionId}}
     doc.eventEmitter.removeListener 'op', listener
     doc.eventEmitter.removeListener 'cursor', listener
     refreshReapingTimeout docName
+
+    #remove the cursor and emit an event so all clients remove it from their doc
+    delete doc.cursors[sessionId] if doc.cursors
+    cursorData = {}
+    cursorData[sessionId] = null
+    doc.eventEmitter.emit "cursor", {cursor: cursorData, meta: {source: sessionId}}
 
   # Flush saves all snapshot data to the database. I'm not sure whether or not this is actually needed -
   # sharejs will happily replay uncommitted ops when documents are re-opened anyway.
