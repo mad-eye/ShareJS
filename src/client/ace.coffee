@@ -172,8 +172,9 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   doc.detach_ace = ->
     @editorAttached = false
     doc.removeListener 'remoteop', docListener
+    doc.removeListener 'cursors', updateCursors
     editorDoc.removeListener 'change', editorListener
-    #TODO remove cursor listener here
+    editor.removeListener 'changeSelection', cursorListener
     delete doc.detach_ace
 
   return

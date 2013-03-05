@@ -188,7 +188,9 @@
     doc.detach_ace = function() {
       this.editorAttached = false;
       doc.removeListener('remoteop', docListener);
+      doc.removeListener('cursors', updateCursors);
       editorDoc.removeListener('change', editorListener);
+      editor.removeListener('changeSelection', cursorListener);
       return delete doc.detach_ace;
     };
   });
