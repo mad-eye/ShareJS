@@ -509,7 +509,7 @@ module.exports = Model = (db, options) ->
       data = {}
       data[sessionId] = cursorData
       doc.eventEmitter.emit "cursor", {cursor: data, meta: {source: sessionId}}
-      callback null
+      callback? null
 
   # TODO: store (some) metadata in DB
   # TODO: op and meta should be combineable in the op that gets sent
