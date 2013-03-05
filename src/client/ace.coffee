@@ -4,44 +4,39 @@ Range = require("ace/range").Range
 
 rangeToCursor = (editorDoc, range) ->
   lines = editorDoc.$lines
-
+  [start, end] = [null,null]
   offset = 0
+
   for line, i in lines
-    offset += if i < range.start.row
-      line.length
-    else
-      range.start.column
-    break if range.start.row == i
-
-  # Add the row number to include newlines.
-  start = offset + range.start.row
-
-  offset = 0
-  for line, i in lines
-    offset += if i < range.end.row
-      line.length
-    else
-      range.end.column
-    break if range.end.row == i
-
-  # Add the row number to include newlines.
-  end = offset + range.end.row
-  [start, end]
+    if i == range.start.row
+      #add range.start.row to include newlines
+      start = offset + range.start.column + range.start.row
+    if i == range.end.row
+      #add range.end.row to include newlines
+      end = offset + range.end.column + range.end.row
+    offset += line.length
+    return [start,end] if start? and end?
 
 cursorToRange = (editorDoc, cursor) ->
-  cursor = cursor[1] if cursor instanceof Array
+  cursor = [cursor, cursor] unless cursor instanceof Array
   lines = editorDoc.$lines
   offset = 0
-  for line, i in lines
-    if offset + line.length < cursor
-      offset += line.length + 1 # +1 for newline
-    else
-      row = i
-      column = cursor - offset 
-      range = new Range()
-      range.cursor = {row: row, column: column}
-      return range
+  [start, end] = [null, null]
 
+  for line, i in lines
+    if offset + line.length > cursor[0]
+      start = {row:i, column: cursor[0] - offset}
+    if offset + line.length > cursor[1]
+      end = {row:i, column: cursor[1] - offset}
+    if start and end
+      range = new Range()
+      #location where the cursor will be drawn
+      range.cursor = {row: end.row, column: end.column}
+      range.start = start
+      range.end = end
+      return range
+    #+1 for newline
+    offset += line.length + 1
 
 # Convert an ace delta into an op understood by share.js
 applyToShareJS = (editorDoc, delta, doc) ->

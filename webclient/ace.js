@@ -6,50 +6,58 @@
   Range = require("ace/range").Range;
 
   rangeToCursor = function(editorDoc, range) {
-    var end, i, line, lines, offset, start, _i, _j, _len, _len1;
+    var end, i, line, lines, offset, start, _i, _len, _ref;
     lines = editorDoc.$lines;
+    _ref = [null, null], start = _ref[0], end = _ref[1];
     offset = 0;
     for (i = _i = 0, _len = lines.length; _i < _len; i = ++_i) {
       line = lines[i];
-      offset += i < range.start.row ? line.length : range.start.column;
-      if (range.start.row === i) {
-        break;
+      if (i === range.start.row) {
+        start = offset + range.start.column + range.start.row;
+      }
+      if (i === range.end.row) {
+        end = offset + range.end.column + range.end.row;
+      }
+      offset += line.length;
+      if ((start != null) && (end != null)) {
+        return [start, end];
       }
     }
-    start = offset + range.start.row;
-    offset = 0;
-    for (i = _j = 0, _len1 = lines.length; _j < _len1; i = ++_j) {
-      line = lines[i];
-      offset += i < range.end.row ? line.length : range.end.column;
-      if (range.end.row === i) {
-        break;
-      }
-    }
-    end = offset + range.end.row;
-    return [start, end];
   };
 
   cursorToRange = function(editorDoc, cursor) {
-    var column, i, line, lines, offset, range, row, _i, _len;
-    if (cursor instanceof Array) {
-      cursor = cursor[1];
+    var end, i, line, lines, offset, range, start, _i, _len, _ref;
+    if (!(cursor instanceof Array)) {
+      cursor = [cursor, cursor];
     }
     lines = editorDoc.$lines;
     offset = 0;
+    _ref = [null, null], start = _ref[0], end = _ref[1];
     for (i = _i = 0, _len = lines.length; _i < _len; i = ++_i) {
       line = lines[i];
-      if (offset + line.length < cursor) {
-        offset += line.length + 1;
-      } else {
-        row = i;
-        column = cursor - offset;
+      if (offset + line.length > cursor[0]) {
+        start = {
+          row: i,
+          column: cursor[0] - offset
+        };
+      }
+      if (offset + line.length > cursor[1]) {
+        end = {
+          row: i,
+          column: cursor[1] - offset
+        };
+      }
+      if (start && end) {
         range = new Range();
         range.cursor = {
-          row: row,
-          column: column
+          row: end.row,
+          column: end.column
         };
+        range.start = start;
+        range.end = end;
         return range;
       }
+      offset += line.length + 1;
     }
   };
 
