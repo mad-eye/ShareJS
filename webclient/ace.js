@@ -23,6 +23,7 @@
         return [start, end];
       }
     }
+    return [start, end];
   };
 
   cursorToRange = function(editorDoc, cursor) {
@@ -129,7 +130,7 @@
         if (!__hasProp.call(_ref2, sessionId)) continue;
         cursor = _ref2[sessionId];
         range = cursorToRange(editorDoc, cursor);
-        this.markers.push(editor.session.addMarker(range, "ace_selection", "line"));
+        this.markers.push(editor.session.addMarker(range, "foreign_selection ace_selection", "line"));
         if (range) {
           ranges.push(range);
         }

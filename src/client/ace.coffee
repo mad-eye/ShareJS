@@ -16,6 +16,7 @@ rangeToCursor = (editorDoc, range) ->
       end = offset + range.end.column + range.end.row
     offset += line.length
     return [start,end] if start? and end?
+  return [start, end]
 
 cursorToRange = (editorDoc, cursor) ->
   cursor = [cursor, cursor] unless cursor instanceof Array
@@ -102,7 +103,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     ranges = []
     for own sessionId, cursor of @cursors
       range = cursorToRange(editorDoc, cursor) 
-      @markers.push(editor.session.addMarker range, "ace_selection", "line")
+      @markers.push(editor.session.addMarker range, "foreign_selection ace_selection", "line")
       ranges.push range if range
     ranges.push cursor: null #need this for the user's own cursor
 
