@@ -12,10 +12,10 @@
     offset = 0;
     for (i = _i = 0, _len = lines.length; _i < _len; i = ++_i) {
       line = lines[i];
-      if (i === range.start.row) {
+      if (i === range.start.row && !start) {
         start = offset + range.start.column + range.start.row;
       }
-      if (i === range.end.row) {
+      if (i === range.end.row && !end) {
         end = offset + range.end.column + range.end.row;
       }
       offset += line.length;
@@ -35,13 +35,13 @@
     _ref = [null, null], start = _ref[0], end = _ref[1];
     for (i = _i = 0, _len = lines.length; _i < _len; i = ++_i) {
       line = lines[i];
-      if (offset + line.length > cursor[0]) {
+      if (offset + line.length >= cursor[0] && !start) {
         start = {
           row: i,
           column: cursor[0] - offset
         };
       }
-      if (offset + line.length > cursor[1]) {
+      if (offset + line.length >= cursor[1] && !end) {
         end = {
           row: i,
           column: cursor[1] - offset
@@ -114,13 +114,22 @@
     check();
     suppress = false;
     updateCursors = function() {
-      var colors, cursor, cursorElement, cursorLayer, i, range, ranges, sessionId, _i, _len, _ref, _ref1, _results;
+      var colors, cursor, cursorElement, cursorLayer, i, marker, range, ranges, sessionId, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _results;
+      if ((_ref = this.markers) == null) {
+        this.markers = [];
+      }
+      _ref1 = this.markers;
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        marker = _ref1[_i];
+        editor.session.removeMarker(marker);
+      }
       ranges = [];
-      _ref = this.cursors;
-      for (sessionId in _ref) {
-        if (!__hasProp.call(_ref, sessionId)) continue;
-        cursor = _ref[sessionId];
+      _ref2 = this.cursors;
+      for (sessionId in _ref2) {
+        if (!__hasProp.call(_ref2, sessionId)) continue;
+        cursor = _ref2[sessionId];
         range = cursorToRange(editorDoc, cursor);
+        this.markers.push(editor.session.addMarker(range, "ace_selection", "line"));
         if (range) {
           ranges.push(range);
         }
@@ -132,10 +141,10 @@
       cursorLayer = editor.renderer.$cursorLayer;
       cursorLayer.update(editor.renderer.layerConfig);
       colors = ["Brown", "DarkCyan", "DarkGreen", "DarkRed", "DarkSeaGreen", "MediumSlateBlue"];
-      _ref1 = cursorLayer.cursors.slice(1);
+      _ref3 = cursorLayer.cursors.slice(1);
       _results = [];
-      for (i = _i = 0, _len = _ref1.length; _i < _len; i = ++_i) {
-        cursorElement = _ref1[i];
+      for (i = _j = 0, _len1 = _ref3.length; _j < _len1; i = ++_j) {
+        cursorElement = _ref3[i];
         _results.push(cursorElement.style.borderColor = colors[i % 6]);
       }
       return _results;
@@ -150,10 +159,9 @@
       return check();
     };
     cursorListener = function(change) {
-      var currentSelection, selectionRange;
-      currentSelection = editor.getSelectionRange();
-      selectionRange = rangeToCursor(editorDoc, currentSelection);
-      return doc.setCursor(selectionRange);
+      var cursor;
+      cursor = rangeToCursor(editorDoc, editor.getSelectionRange());
+      return doc.setCursor(cursor);
     };
     editorDoc.on('change', editorListener);
     editor.on("changeSelection", cursorListener);

@@ -8,10 +8,10 @@ rangeToCursor = (editorDoc, range) ->
   offset = 0
 
   for line, i in lines
-    if i == range.start.row
+    if i == range.start.row and not start
       #add range.start.row to include newlines
       start = offset + range.start.column + range.start.row
-    if i == range.end.row
+    if i == range.end.row and not end
       #add range.end.row to include newlines
       end = offset + range.end.column + range.end.row
     offset += line.length
@@ -24,9 +24,9 @@ cursorToRange = (editorDoc, cursor) ->
   [start, end] = [null, null]
 
   for line, i in lines
-    if offset + line.length > cursor[0]
+    if offset + line.length >= cursor[0] and not start
       start = {row:i, column: cursor[0] - offset}
-    if offset + line.length > cursor[1]
+    if offset + line.length >= cursor[1] and not end
       end = {row:i, column: cursor[1] - offset}
     if start and end
       range = new Range()
@@ -96,9 +96,13 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   suppress = false
   
   updateCursors = ->
+    @markers ?= []
+    for marker in @markers
+      editor.session.removeMarker marker
     ranges = []
     for own sessionId, cursor of @cursors
       range = cursorToRange(editorDoc, cursor) 
+      @markers.push(editor.session.addMarker range, "ace_selection", "line")
       ranges.push range if range
     ranges.push cursor: null #need this for the user's own cursor
 
@@ -121,9 +125,9 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     check()
 
   cursorListener = (change) ->
-    currentSelection = editor.getSelectionRange()
-    selectionRange = rangeToCursor editorDoc, currentSelection
-    doc.setCursor selectionRange
+    #TODO pass which direction the cursor is selected
+    cursor = rangeToCursor editorDoc, editor.getSelectionRange()
+    doc.setCursor cursor
 
   editorDoc.on 'change', editorListener
   editor.on "changeSelection", cursorListener
