@@ -74,14 +74,15 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
 
   check = ->
     window.setTimeout ->
-        editorText = editorDoc.getValue()
-        otText = doc.getText()
+      editorText = editorDoc.getValue()
+      otText = doc.getText()
 
-        if editorText != otText
-          console.error "Text does not match!"
-          console.error "editor: #{editorText}"
-          console.error "ot:     #{otText}"
-          # Should probably also replace the editor text with the doc snapshot.
+      if editorText != otText
+        console.error "editor: #{editorText}"
+        console.error "ot:     #{otText}"
+        suppress = true
+        editorDoc.setValue(otText)
+        suppress = false
       , 0
 
   if keepEditorContents
