@@ -73,7 +73,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   editorDoc.setNewLineMode 'unix'
 
   check = ->
-    window.setTimeout ->
+    window.setTimeout =>
       editorText = editorDoc.getValue()
       otText = doc.getText()
 
@@ -83,7 +83,9 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
         suppress = true
         editorDoc.setValue(otText)
         suppress = false
-      , 0
+        doc.emit "error", "OT/editor mismatch\nOT: #{otText}\neditor: #{editorText}"
+    , 0
+
 
   if keepEditorContents
     doc.del 0, doc.getText().length
