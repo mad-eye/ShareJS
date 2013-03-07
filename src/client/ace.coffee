@@ -83,7 +83,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
         suppress = true
         editorDoc.setValue(otText)
         suppress = false
-        doc.emit "error", "OT/editor mismatch\nOT: #{otText}\neditor: #{editorText}"
+        doc.emit "warn", "OT/editor mismatch\nOT: #{otText}\neditor: #{editorText}"
     , 0
 
 
