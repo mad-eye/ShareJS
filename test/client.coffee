@@ -189,6 +189,18 @@ genTests = (client) -> testCase
       @model.applyOp @name, {v:0, op:[{i:'hi', p:0}]}, (error, version) ->
         test.fail error if error
 
+  'Receive cursor events': (test) ->
+    @c.open @name, 'text', (error, doc) =>
+      test.ifError error
+      test.strictEqual doc.name, @name
+
+      doc.on "cursors", (cursors) ->
+        test.deepEqual doc.cursors, {"OTHER_SESSION": [4,6]}
+        test.done()
+
+      @model.updateCursor @name, "OTHER_SESSION", [4,6], (error)->
+        test.ifError error
+
   'get a nonexistent document passes null to the callback': (test) ->
     @c.openExisting @name, (error, doc) ->
       test.strictEqual error, 'Document does not exist'
