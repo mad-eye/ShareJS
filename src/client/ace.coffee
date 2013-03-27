@@ -103,9 +103,10 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     ranges = []
     for own sessionId, cursor of @cursors
       range = cursorToRange(editorDoc, cursor) 
-      #TODO maybe we need to handle null range here..?
-      @markers.push(editor.session.addMarker range, "foreign_selection ace_selection", "line")
-      ranges.push range if range
+      continue unless range?
+      if range.start.column != range.end.column or range.start.row != range.end.row
+        @markers.push(editor.session.addMarker range, "foreign_selection ace_selection", "line")
+      ranges.push range
     ranges.push cursor: null #need this for the user's own cursor
 
     editor.session.$selectionMarkers = ranges
