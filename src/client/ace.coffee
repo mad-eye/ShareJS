@@ -103,6 +103,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     ranges = []
     for own sessionId, cursor of @cursors
       range = cursorToRange(editorDoc, cursor) 
+      #TODO maybe we need to handle null range here..?
       @markers.push(editor.session.addMarker range, "foreign_selection ace_selection", "line")
       ranges.push range if range
     ranges.push cursor: null #need this for the user's own cursor
@@ -156,13 +157,13 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
 
     row:row, column:offset
 
-  doc.on 'insert', (pos, text) ->
+  doc.on 'insert', insertListener = (pos, text) ->
     suppress = true
     editorDoc.insert offsetToPos(pos), text
     suppress = false
     check()
 
-  doc.on 'delete', (pos, text) ->
+  doc.on 'delete', deleteListener = (pos, text) ->
     suppress = true
     range = Range.fromPoints offsetToPos(pos), offsetToPos(pos + text.length)
     editorDoc.remove range
@@ -173,6 +174,8 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     @editorAttached = false
     doc.removeListener 'remoteop', docListener
     doc.removeListener 'cursors', updateCursors
+    doc.removeListener 'insert', insertListener
+    doc.removeListener 'delete', deleteListener
     editorDoc.removeListener 'change', editorListener
     editor.removeListener 'changeSelection', cursorListener
     delete doc.detach_ace
