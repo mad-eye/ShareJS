@@ -101,13 +101,13 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     for marker in @markers
       editor.session.removeMarker marker
     ranges = []
+    ranges.push cursor: null #need this for the user's own cursor
     for own sessionId, cursor of @cursors
       range = cursorToRange(editorDoc, cursor) 
       continue unless range?
       if range.start.column != range.end.column or range.start.row != range.end.row
         @markers.push(editor.session.addMarker range, "foreign_selection ace_selection", "line")
       ranges.push range
-    ranges.push cursor: null #need this for the user's own cursor
 
     editor.session.$selectionMarkers = ranges
     cursorLayer = editor.renderer.$cursorLayer
