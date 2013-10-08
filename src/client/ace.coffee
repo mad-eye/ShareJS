@@ -3,41 +3,15 @@
 Range = require("ace/range").Range
 
 rangeToCursor = (editorDoc, range) ->
-  lines = editorDoc.$lines
-  [start, end] = [null,null]
-  offset = 0
-
-  for line, i in lines
-    if i == range.start.row and not start
-      #add range.start.row to include newlines
-      start = offset + range.start.column + range.start.row
-    if i == range.end.row and not end
-      #add range.end.row to include newlines
-      end = offset + range.end.column + range.end.row
-    offset += line.length
-    return [start,end] if start? and end?
-  return [start, end]
+  return [editorDoc.positionToIndex(range.start), editorDoc.positionToIndex(range.end)]
 
 cursorToRange = (editorDoc, cursor) ->
   cursor = [cursor, cursor] unless cursor instanceof Array
-  lines = editorDoc.$lines
-  offset = 0
-  [start, end] = [null, null]
-
-  for line, i in lines
-    if offset + line.length >= cursor[0] and not start
-      start = {row:i, column: cursor[0] - offset}
-    if offset + line.length >= cursor[1] and not end
-      end = {row:i, column: cursor[1] - offset}
-    if start and end
-      range = new Range()
-      #location where the cursor will be drawn
-      range.cursor = {row: end.row, column: end.column}
-      range.start = start
-      range.end = end
-      return range
-    #+1 for newline
-    offset += line.length + 1
+  start = editorDoc.indexToPosition cursor[0]
+  end = editorDoc.indexToPosition cursor[1]
+  range = Range.fromPoints start, end
+  range.cursor = end
+  return range
 
 # Convert an ace delta into an op understood by share.js
 applyToShareJS = (editorDoc, delta, doc) ->
@@ -141,23 +115,10 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     suppress = true
     applyToDoc editorDoc, op
     suppress = false
-
     check()
 
-
-  # Horribly inefficient.
   offsetToPos = (offset) ->
-    # Again, very inefficient.
-    lines = editorDoc.getAllLines()
-
-    row = 0
-    for line, row in lines
-      break if offset <= line.length
-
-      # +1 for the newline.
-      offset -= lines[row].length + 1
-
-    row:row, column:offset
+    editorDoc.indexToPosition offset
 
   doc.on 'insert', (pos, text) ->
     suppress = true
