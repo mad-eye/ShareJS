@@ -124,6 +124,8 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
       color = sharejs.getColorForSession sessionIds[i]
       console.log "Got color #{color} for session #{sessionIds[i]}"
       cursorElement.style.borderColor = color
+    ownCursor = cursorLayer.cursors[cursorLayer.cursors.length-1]
+    ownCursor.style.borderColor = "Black"
 
   # Listen for edits in ace
   editorListener = (change) ->
@@ -181,12 +183,13 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
 
 #index:color
 _colors = [
-  "Brown",
-  "DarkCyan",
-  "DarkGreen",
-  "DarkRed",
-  "DarkSeaGreen",
-  "MediumSlateBlue",
+  "#63782F", #Dark Green
+  "#A13CB4", #Dark Purple
+  "#FF913D", #Dark Orange
+  "#00A3BB",
+  "#FF007A", #Dark Pink
+  "#58B442",
+  "#63782F"
 ]
 
 #sessionId:color

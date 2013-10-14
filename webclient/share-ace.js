@@ -96,7 +96,7 @@
       return sharejs._setActiveSessions(currentSessionIds);
     };
     updateCursors = function() {
-      var color, cursor, cursorElement, cursorLayer, i, range, ranges, session, sessionId, sessionIds, _i, _len, _ref, _ref1, _results;
+      var color, cursor, cursorElement, cursorLayer, i, ownCursor, range, ranges, session, sessionId, sessionIds, _i, _len, _ref, _ref1;
       clearSessions();
       if (_this.sessions == null) {
         _this.sessions = {};
@@ -130,14 +130,14 @@
       cursorLayer = editor.renderer.$cursorLayer;
       cursorLayer.update(editor.renderer.layerConfig);
       _ref1 = cursorLayer.cursors.slice(0, -1);
-      _results = [];
       for (i = _i = 0, _len = _ref1.length; _i < _len; i = ++_i) {
         cursorElement = _ref1[i];
         color = sharejs.getColorForSession(sessionIds[i]);
         console.log("Got color " + color + " for session " + sessionIds[i]);
-        _results.push(cursorElement.style.borderColor = color);
+        cursorElement.style.borderColor = color;
       }
-      return _results;
+      ownCursor = cursorLayer.cursors[cursorLayer.cursors.length - 1];
+      return ownCursor.style.borderColor = "Black";
     };
     editorListener = function(change) {
       if (suppress) {
@@ -190,7 +190,7 @@
     };
   });
 
-  _colors = ["Brown", "DarkCyan", "DarkGreen", "DarkRed", "DarkSeaGreen", "MediumSlateBlue"];
+  _colors = ["#63782F", "#A13CB4", "#FF913D", "#00A3BB", "#FF007A", "#58B442", "#63782F"];
 
   _sessionColors = {};
 
