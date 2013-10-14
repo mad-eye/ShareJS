@@ -192,6 +192,9 @@ _colors = [
   "#63782F"
 ]
 
+#TODO: Randomly choose a color.
+overflowColor = "#99cc99"
+
 #sessionId:color
 _sessionColors = {}
 
@@ -212,12 +215,16 @@ sharejs.getColorForSession = (sessionId) ->
     _sessionColors[sessionId] = color
     console.log "Found color #{color} for #{sessionId}"
     return color
+  #Didn't find any color, return the overflowColor
+  #TODO: Randomly choose a color.
+  return overflowColor
 
 sharejs.getIndexForSession = (sessionId) ->
   color = sharejs.getColorForSession sessionId
   index = _colors.indexOf color
   console.log "Found index #{index} for color #{color} for session #{sessionId}"
-  return index
+  return index if index > -1
+  return null
 
 sharejs.getSessionColors = ->
   return _sessionColors
