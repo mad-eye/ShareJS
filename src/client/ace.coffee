@@ -73,31 +73,57 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   # to prevent an infinite typing loop.
   suppress = false
   
-  clearSelections = =>
-    @markers ?= []
-    for marker in @markers
-      editor.session.removeMarker marker
+  clearSessions = =>
+    return unless @sessions
+    currentSessionIds = []
+    for sessionId, session of @sessions
+      #Remove old selection
+      editor.session.removeMarker session.marker if session.marker
+      currentSessionIds.push sessionId
+      #TODO: Remove gutter decoration
+    sharejs._setActiveSessions currentSessionIds
 
+  #Sessions carry the data for a given session:
+  #session:
+  #  cursor (share cursor)
+  #  range (ace selection range)
+  #  position (share position, cursor[1])ls
+  #  marker (for selection)
+  #
   updateCursors = =>
-    clearSelections()
-    @markers ?= []
+    clearSessions()
+    @sessions ?= {}
     ranges = []
+    #Keep track of sesionId:index for cursor color
+    sessionIds = []
+    console.log "###: cursors:", @cursors
     for own sessionId, cursor of @cursors
-      range = cursorToRange(editorDoc, cursor) 
-      @markers.push(editor.session.addMarker range, "foreign_selection ace_selection", "line")
+      @sessions[sessionId] = session = {}
+      session.cursor = cursor
+      range = cursorToRange(editorDoc, cursor)
+      session.index = sharejs.getIndexForSession sessionId
+      session.marker = editor.session.addMarker range, "foreign_selection foreign_selection_#{session.index} ace_selection", "line"
+      cursor = [cursor, cursor] unless cursor instanceof Array
+      session.position = cursor[1]
       ranges.push range if range
+      sessionIds.push sessionId
     ranges.push cursor: null #need this for the user's own cursor
+    console.log "Found sessionIds", sessionIds
 
+    #Set cursors, which seems to have to be done in an arcane way
+    #When the cursorLayer updates, it uses $selectionMarkers
+    #We actually just use the `cursor` property of the elts of the
+    #passed array.
     editor.session.$selectionMarkers = ranges
     cursorLayer = editor.renderer.$cursorLayer
     #rerender
     cursorLayer.update(editor.renderer.layerConfig)
-    colors = ["Brown", "DarkCyan", "DarkGreen", "DarkRed", "DarkSeaGreen", "MediumSlateBlue"]
     #color all the other users' cursors
-    for cursorElement,i  in cursorLayer.cursors[1..]
-      cursorElement.style.borderColor = colors[i%6]
-
-  @on "cursors", updateCursors
+    #the last cursor is the users, don't mess with it
+    for cursorElement, i in cursorLayer.cursors[...-1]
+      color = sharejs.getColorForSession sessionIds[i]
+      console.log "Got color #{color} for session #{sessionIds[i]}"
+      cursorElement.style.borderColor = color
 
   # Listen for edits in ace
   editorListener = (change) ->
@@ -111,6 +137,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     cursor = rangeToCursor editorDoc, editor.getSelectionRange()
     doc.setCursor cursor
 
+  @on "cursors", updateCursors
   editorDoc.on 'change', editorListener
   editor.on "changeSelection", cursorListener
 
@@ -139,6 +166,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
 
   doc.detach_ace = ->
     clearSelections()
+    clearSessions()
     @editorAttached = false
     doc.removeListener 'remoteop', docListener
     doc.removeListener 'cursors', updateCursors
@@ -147,4 +175,50 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     delete doc.detach_ace
 
   return
+
+##
+# Colors section
+
+#index:color
+_colors = [
+  "Brown",
+  "DarkCyan",
+  "DarkGreen",
+  "DarkRed",
+  "DarkSeaGreen",
+  "MediumSlateBlue",
+]
+
+#sessionId:color
+_sessionColors = {}
+
+sharejs._setActiveSessions = (currentSessionIds) ->
+  console.log "Setting activeSessions to", currentSessionIds
+  for sessionId, color of _sessionColors
+    unless sessionId in currentSessionIds
+      delete _sessionColors[sessionId]
+  console.log "New sessionColors", _sessionColors
+
+sharejs.getColorForSession = (sessionId) ->
+  color = _sessionColors[sessionId]
+  console.log "Found color #{color} for #{sessionId}" if color?
+  return color if color?
+  assignedColors = _.values _sessionColors
+  for color in _colors
+    continue if color in assignedColors
+    _sessionColors[sessionId] = color
+    console.log "Found color #{color} for #{sessionId}"
+    return color
+
+sharejs.getIndexForSession = (sessionId) ->
+  color = sharejs.getColorForSession sessionId
+  index = _colors.indexOf color
+  console.log "Found index #{index} for color #{color} for session #{sessionId}"
+  return index
+
+sharejs.getSessionColors = ->
+  return _sessionColors
+
+sharejs.getColors = ->
+  return _colors
 
