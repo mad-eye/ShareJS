@@ -73,10 +73,14 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   # to prevent an infinite typing loop.
   suppress = false
   
-  updateCursors = ->
+  clearSelections = =>
     @markers ?= []
     for marker in @markers
       editor.session.removeMarker marker
+
+  updateCursors = =>
+    clearSelections()
+    @markers ?= []
     ranges = []
     for own sessionId, cursor of @cursors
       range = cursorToRange(editorDoc, cursor) 
@@ -134,6 +138,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     check()
 
   doc.detach_ace = ->
+    clearSelections()
     @editorAttached = false
     doc.removeListener 'remoteop', docListener
     doc.removeListener 'cursors', updateCursors

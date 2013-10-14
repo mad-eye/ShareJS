@@ -45,7 +45,8 @@
   };
 
   window.sharejs.extendDoc('attach_ace', function(editor, keepEditorContents) {
-    var check, cursorListener, doc, docListener, editorDoc, editorListener, offsetToPos, suppress, updateCursors;
+    var check, clearSelections, cursorListener, doc, docListener, editorDoc, editorListener, offsetToPos, suppress, updateCursors,
+      _this = this;
     this.editorAttached = true;
     if (!this.provides['text']) {
       throw new Error('Only text documents can be attached to ace');
@@ -77,23 +78,32 @@
     }
     check();
     suppress = false;
-    updateCursors = function() {
-      var colors, cursor, cursorElement, cursorLayer, i, marker, range, ranges, sessionId, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
-      if (this.markers == null) {
-        this.markers = [];
+    clearSelections = function() {
+      var marker, _i, _len, _ref, _results;
+      if (_this.markers == null) {
+        _this.markers = [];
       }
-      _ref = this.markers;
+      _ref = _this.markers;
+      _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         marker = _ref[_i];
-        editor.session.removeMarker(marker);
+        _results.push(editor.session.removeMarker(marker));
+      }
+      return _results;
+    };
+    updateCursors = function() {
+      var colors, cursor, cursorElement, cursorLayer, i, range, ranges, sessionId, _i, _len, _ref, _ref1, _results;
+      clearSelections();
+      if (_this.markers == null) {
+        _this.markers = [];
       }
       ranges = [];
-      _ref1 = this.cursors;
-      for (sessionId in _ref1) {
-        if (!__hasProp.call(_ref1, sessionId)) continue;
-        cursor = _ref1[sessionId];
+      _ref = _this.cursors;
+      for (sessionId in _ref) {
+        if (!__hasProp.call(_ref, sessionId)) continue;
+        cursor = _ref[sessionId];
         range = cursorToRange(editorDoc, cursor);
-        this.markers.push(editor.session.addMarker(range, "foreign_selection ace_selection", "line"));
+        _this.markers.push(editor.session.addMarker(range, "foreign_selection ace_selection", "line"));
         if (range) {
           ranges.push(range);
         }
@@ -105,10 +115,10 @@
       cursorLayer = editor.renderer.$cursorLayer;
       cursorLayer.update(editor.renderer.layerConfig);
       colors = ["Brown", "DarkCyan", "DarkGreen", "DarkRed", "DarkSeaGreen", "MediumSlateBlue"];
-      _ref2 = cursorLayer.cursors.slice(1);
+      _ref1 = cursorLayer.cursors.slice(1);
       _results = [];
-      for (i = _j = 0, _len1 = _ref2.length; _j < _len1; i = ++_j) {
-        cursorElement = _ref2[i];
+      for (i = _i = 0, _len = _ref1.length; _i < _len; i = ++_i) {
+        cursorElement = _ref1[i];
         _results.push(cursorElement.style.borderColor = colors[i % 6]);
       }
       return _results;
@@ -153,6 +163,7 @@
       return check();
     });
     doc.detach_ace = function() {
+      clearSelections();
       this.editorAttached = false;
       doc.removeListener('remoteop', docListener);
       doc.removeListener('cursors', updateCursors);
