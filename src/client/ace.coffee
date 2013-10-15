@@ -96,7 +96,6 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     ranges = []
     #Keep track of sesionId:index for cursor color
     sessionIds = []
-    console.log "###: cursors:", @cursors
     for own sessionId, cursor of @cursors
       @sessions[sessionId] = session = {}
       session.cursor = cursor
@@ -108,7 +107,6 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
       ranges.push range if range
       sessionIds.push sessionId
     ranges.push cursor: null #need this for the user's own cursor
-    console.log "Found sessionIds", sessionIds
 
     #Set cursors, which seems to have to be done in an arcane way
     #When the cursorLayer updates, it uses $selectionMarkers
@@ -122,7 +120,6 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     #the last cursor is the users, don't mess with it
     for cursorElement, i in cursorLayer.cursors[...-1]
       color = sharejs.getColorForSession sessionIds[i]
-      console.log "Got color #{color} for session #{sessionIds[i]}"
       cursorElement.style.borderColor = color
     ownCursor = cursorLayer.cursors[cursorLayer.cursors.length-1]
     ownCursor.style.borderColor = "Black"
@@ -167,7 +164,6 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     check()
 
   doc.detach_ace = ->
-    clearSelections()
     clearSessions()
     @editorAttached = false
     doc.removeListener 'remoteop', docListener
@@ -199,21 +195,17 @@ overflowColor = "#99cc99"
 _sessionColors = {}
 
 sharejs._setActiveSessions = (currentSessionIds) ->
-  console.log "Setting activeSessions to", currentSessionIds
   for sessionId, color of _sessionColors
     unless sessionId in currentSessionIds
       delete _sessionColors[sessionId]
-  console.log "New sessionColors", _sessionColors
 
 sharejs.getColorForSession = (sessionId) ->
   color = _sessionColors[sessionId]
-  console.log "Found color #{color} for #{sessionId}" if color?
   return color if color?
   assignedColors = _.values _sessionColors
   for color in _colors
     continue if color in assignedColors
     _sessionColors[sessionId] = color
-    console.log "Found color #{color} for #{sessionId}"
     return color
   #Didn't find any color, return the overflowColor
   #TODO: Randomly choose a color.
@@ -222,7 +214,6 @@ sharejs.getColorForSession = (sessionId) ->
 sharejs.getIndexForSession = (sessionId) ->
   color = sharejs.getColorForSession sessionId
   index = _colors.indexOf color
-  console.log "Found index #{index} for color #{color} for session #{sessionId}"
   return index if index > -1
   return null
 

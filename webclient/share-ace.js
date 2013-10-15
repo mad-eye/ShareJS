@@ -103,7 +103,6 @@
       }
       ranges = [];
       sessionIds = [];
-      console.log("###: cursors:", _this.cursors);
       _ref = _this.cursors;
       for (sessionId in _ref) {
         if (!__hasProp.call(_ref, sessionId)) continue;
@@ -125,7 +124,6 @@
       ranges.push({
         cursor: null
       });
-      console.log("Found sessionIds", sessionIds);
       editor.session.$selectionMarkers = ranges;
       cursorLayer = editor.renderer.$cursorLayer;
       cursorLayer.update(editor.renderer.layerConfig);
@@ -133,7 +131,6 @@
       for (i = _i = 0, _len = _ref1.length; _i < _len; i = ++_i) {
         cursorElement = _ref1[i];
         color = sharejs.getColorForSession(sessionIds[i]);
-        console.log("Got color " + color + " for session " + sessionIds[i]);
         cursorElement.style.borderColor = color;
       }
       ownCursor = cursorLayer.cursors[cursorLayer.cursors.length - 1];
@@ -179,7 +176,6 @@
       return check();
     });
     doc.detach_ace = function() {
-      clearSelections();
       clearSessions();
       this.editorAttached = false;
       doc.removeListener('remoteop', docListener);
@@ -197,23 +193,22 @@
   _sessionColors = {};
 
   sharejs._setActiveSessions = function(currentSessionIds) {
-    var color, sessionId;
-    console.log("Setting activeSessions to", currentSessionIds);
+    var color, sessionId, _results;
+    _results = [];
     for (sessionId in _sessionColors) {
       color = _sessionColors[sessionId];
       if (__indexOf.call(currentSessionIds, sessionId) < 0) {
-        delete _sessionColors[sessionId];
+        _results.push(delete _sessionColors[sessionId]);
+      } else {
+        _results.push(void 0);
       }
     }
-    return console.log("New sessionColors", _sessionColors);
+    return _results;
   };
 
   sharejs.getColorForSession = function(sessionId) {
     var assignedColors, color, _i, _len;
     color = _sessionColors[sessionId];
-    if (color != null) {
-      console.log("Found color " + color + " for " + sessionId);
-    }
     if (color != null) {
       return color;
     }
@@ -224,7 +219,6 @@
         continue;
       }
       _sessionColors[sessionId] = color;
-      console.log("Found color " + color + " for " + sessionId);
       return color;
     }
     return overflowColor;
@@ -234,7 +228,6 @@
     var color, index;
     color = sharejs.getColorForSession(sessionId);
     index = _colors.indexOf(color);
-    console.log("Found index " + index + " for color " + color + " for session " + sessionId);
     if (index > -1) {
       return index;
     }
