@@ -91,6 +91,7 @@
         if (session.marker) {
           editor.session.removeMarker(session.marker);
         }
+        editor.session.removeGutterDecoration(session.position.row, "foreign_selection_" + session.index);
         currentSessionIds.push(sessionId);
       }
       return sharejs._setActiveSessions(currentSessionIds);
@@ -98,9 +99,7 @@
     updateCursors = function() {
       var color, cursor, cursorElement, cursorLayer, i, ownCursor, range, ranges, session, sessionId, sessionIds, _i, _len, _ref, _ref1;
       clearSessions();
-      if (_this.sessions == null) {
-        _this.sessions = {};
-      }
+      _this.sessions = {};
       ranges = [];
       sessionIds = [];
       _ref = _this.cursors;
@@ -112,10 +111,8 @@
         range = cursorToRange(editorDoc, cursor);
         session.index = sharejs.getIndexForSession(sessionId);
         session.marker = editor.session.addMarker(range, "foreign_selection foreign_selection_" + session.index + " ace_selection", "line");
-        if (!(cursor instanceof Array)) {
-          cursor = [cursor, cursor];
-        }
-        session.position = cursor[1];
+        session.position = range.end;
+        editor.session.addGutterDecoration(session.position.row, "foreign_selection_" + session.index);
         if (range) {
           ranges.push(range);
         }

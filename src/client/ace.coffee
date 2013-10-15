@@ -79,6 +79,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     for sessionId, session of @sessions
       #Remove old selection
       editor.session.removeMarker session.marker if session.marker
+      editor.session.removeGutterDecoration session.position.row, "foreign_selection_#{session.index}"
       currentSessionIds.push sessionId
       #TODO: Remove gutter decoration
     sharejs._setActiveSessions currentSessionIds
@@ -92,7 +93,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   #
   updateCursors = =>
     clearSessions()
-    @sessions ?= {}
+    @sessions = {}
     ranges = []
     #Keep track of sesionId:index for cursor color
     sessionIds = []
@@ -100,10 +101,12 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
       @sessions[sessionId] = session = {}
       session.cursor = cursor
       range = cursorToRange(editorDoc, cursor)
+      #Selections
       session.index = sharejs.getIndexForSession sessionId
       session.marker = editor.session.addMarker range, "foreign_selection foreign_selection_#{session.index} ace_selection", "line"
-      cursor = [cursor, cursor] unless cursor instanceof Array
-      session.position = cursor[1]
+      #Gutter decorations
+      session.position = range.end
+      editor.session.addGutterDecoration session.position.row, "foreign_selection_#{session.index}"
       ranges.push range if range
       sessionIds.push sessionId
     ranges.push cursor: null #need this for the user's own cursor
