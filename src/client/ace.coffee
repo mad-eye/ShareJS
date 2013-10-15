@@ -81,7 +81,6 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
       editor.session.removeMarker session.marker if session.marker
       editor.session.removeGutterDecoration session.position.row, "foreign_selection_#{session.index}"
       currentSessionIds.push sessionId
-      #TODO: Remove gutter decoration
     sharejs._setActiveSessions currentSessionIds
 
   #Sessions carry the data for a given session:
