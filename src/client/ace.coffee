@@ -73,41 +73,41 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   # to prevent an infinite typing loop.
   suppress = false
   
-  clearSessions = =>
-    return unless @sessions
-    currentSessionIds = []
-    for sessionId, session of @sessions
+  clearConnections = =>
+    return unless @connections
+    currentConnectionIds = []
+    for connectionId, connection of @connections
       #Remove old selection
-      editor.session.removeMarker session.marker if session.marker
-      editor.session.removeGutterDecoration session.position.row, "foreign_selection_#{session.index}"
-      currentSessionIds.push sessionId
-    sharejs._setActiveSessions currentSessionIds
+      editor.session.removeMarker connection.marker if connection.marker
+      editor.session.removeGutterDecoration connection.position.row, "foreign_selection_#{connection.index}"
+      currentConnectionIds.push connectionId
+    sharejs._setActiveConnections currentConnectionIds
 
-  #Sessions carry the data for a given session:
-  #session:
+  #Connections carry the data for a given connection:
+  #connection:
   #  cursor (share cursor)
   #  range (ace selection range)
   #  position (share position, cursor[1])ls
   #  marker (for selection)
   #
   updateCursors = =>
-    clearSessions()
-    @sessions = {}
+    clearConnections()
+    @connections = {}
     ranges = []
     #Keep track of sesionId:index for cursor color
-    sessionIds = []
-    for own sessionId, cursor of @cursors
-      @sessions[sessionId] = session = {}
-      session.cursor = cursor
+    connectionIds = []
+    for own connectionId, cursor of @cursors
+      @connections[connectionId] = connection = {}
+      connection.cursor = cursor
       range = cursorToRange(editorDoc, cursor)
       #Selections
-      session.index = sharejs.getIndexForSession sessionId
-      session.marker = editor.session.addMarker range, "foreign_selection foreign_selection_#{session.index} ace_selection", "line"
+      connection.index = sharejs.getIndexForConnection connectionId
+      connection.marker = editor.session.addMarker range, "foreign_selection foreign_selection_#{connection.index} ace_selection", "line"
       #Gutter decorations
-      session.position = range.end
-      editor.session.addGutterDecoration session.position.row, "foreign_selection_#{session.index}"
+      connection.position = range.end
+      editor.session.addGutterDecoration connection.position.row, "foreign_selection_#{connection.index}"
       ranges.push range if range
-      sessionIds.push sessionId
+      connectionIds.push connectionId
     ranges.push cursor: null #need this for the user's own cursor
 
     #Set cursors, which seems to have to be done in an arcane way
@@ -121,7 +121,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     #color all the other users' cursors
     #the last cursor is the users, don't mess with it
     for cursorElement, i in cursorLayer.cursors[...-1]
-      color = sharejs.getColorForSession sessionIds[i]
+      color = sharejs.getColorForConnection connectionIds[i]
       cursorElement.style.borderColor = color
     ownCursor = cursorLayer.cursors[cursorLayer.cursors.length-1]
     ownCursor.style.borderColor = "Black"
@@ -166,13 +166,13 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     check()
 
   doc.detach_ace = ->
-    clearSessions()
-    @editorAttached = false
     doc.removeListener 'remoteop', docListener
     doc.removeListener 'cursors', updateCursors
     editorDoc.removeListener 'change', editorListener
     editor.removeListener 'changeSelection', cursorListener
     delete doc.detach_ace
+    clearConnections()
+    @editorAttached = false
 
   return
 
@@ -193,34 +193,34 @@ _colors = [
 #TODO: Randomly choose a color.
 overflowColor = "#99cc99"
 
-#sessionId:color
-_sessionColors = {}
+#connectionId:color
+_connectionColors = {}
 
-sharejs._setActiveSessions = (currentSessionIds) ->
-  for sessionId, color of _sessionColors
-    unless sessionId in currentSessionIds
-      delete _sessionColors[sessionId]
+sharejs._setActiveConnections = (currentConnectionIds) ->
+  for connectionId, color of _connectionColors
+    unless connectionId in currentConnectionIds
+      delete _connectionColors[connectionId]
 
-sharejs.getColorForSession = (sessionId) ->
-  color = _sessionColors[sessionId]
+sharejs.getColorForConnection = (connectionId) ->
+  color = _connectionColors[connectionId]
   return color if color?
-  assignedColors = _.values _sessionColors
+  assignedColors = _.values _connectionColors
   for color in _colors
     continue if color in assignedColors
-    _sessionColors[sessionId] = color
+    _connectionColors[connectionId] = color
     return color
   #Didn't find any color, return the overflowColor
   #TODO: Randomly choose a color.
   return overflowColor
 
-sharejs.getIndexForSession = (sessionId) ->
-  color = sharejs.getColorForSession sessionId
+sharejs.getIndexForConnection = (connectionId) ->
+  color = sharejs.getColorForConnection connectionId
   index = _colors.indexOf color
   return index if index > -1
   return null
 
-sharejs.getSessionColors = ->
-  return _sessionColors
+sharejs.getConnectionColors = ->
+  return _connectionColors
 
 sharejs.getColors = ->
   return _colors
