@@ -35,6 +35,15 @@ applyToShareJS = (editorDoc, delta, doc) ->
   
   return
 
+addCursorColorIndex = (cursorElement, index) ->
+  classes = cursorElement.className.split " "
+  newClasses = []
+  for clazz in classes
+    continue if clazz.indexOf('cursor_color_') == 0
+    newClasses.push clazz
+  newClasses.push "cursor_color_#{index}"
+  cursorElement.className = newClasses.join " "
+
 # Attach an ace editor to the document. The editor's contents are replaced
 # with the document's contents unless keepEditorContents is true. (In which case the document's
 # contents are nuked and replaced with the editor's).
@@ -121,10 +130,10 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     #color all the other users' cursors
     #the last cursor is the users, don't mess with it
     for cursorElement, i in cursorLayer.cursors[...-1]
-      color = sharejs.getColorForConnection connectionIds[i]
-      cursorElement.style.borderColor = color
+      index = sharejs.getIndexForConnection connectionIds[i]
+      addCursorColorIndex cursorElement, index
     ownCursor = cursorLayer.cursors[cursorLayer.cursors.length-1]
-    ownCursor.style.borderColor = "Black"
+    addCursorColorIndex ownCursor, "00"
 
   # Listen for edits in ace
   editorListener = (change) ->
@@ -179,49 +188,26 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
 ##
 # Colors section
 
-#index:color
-_colors = [
-  "#63782F", #Dark Green
-  "#A13CB4", #Dark Purple
-  "#FF913D", #Dark Orange
-  "#00A3BB",
-  "#FF007A", #Dark Pink
-  "#58B442",
-  "#63782F"
-]
-
-#TODO: Randomly choose a color.
-overflowColor = "#99cc99"
-
-#connectionId:color
-_connectionColors = {}
+_connections = []
 
 sharejs._setActiveConnections = (currentConnectionIds) ->
-  for connectionId, color of _connectionColors
+  for connectionId, i in _connections
     unless connectionId in currentConnectionIds
-      delete _connectionColors[connectionId]
-
-sharejs.getColorForConnection = (connectionId) ->
-  color = _connectionColors[connectionId]
-  return color if color?
-  assignedColors = _.values _connectionColors
-  for color in _colors
-    continue if color in assignedColors
-    _connectionColors[connectionId] = color
-    return color
-  #Didn't find any color, return the overflowColor
-  #TODO: Randomly choose a color.
-  return overflowColor
+      _connections[i] = null
 
 sharejs.getIndexForConnection = (connectionId) ->
-  color = sharejs.getColorForConnection connectionId
-  index = _colors.indexOf color
+  #Find existing index
+  index = _connections.indexOf connectionId
   return index if index > -1
-  return null
+  #Find first null
+  for cid, i in _connections
+    if cid == null
+      _connections[i] = connectionId
+      return i
+  #Found no nulls, append
+  length = _connections.push connectionId
+  return (length - 1)
 
-sharejs.getConnectionColors = ->
-  return _connectionColors
-
-sharejs.getColors = ->
-  return _colors
+sharejs.getConnections = ->
+  return _connections
 
