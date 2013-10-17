@@ -149,7 +149,7 @@ exports.handler = (session, createAgent) ->
         return if opData.meta.source is agent.sessionId
 
         if opData.cursor
-          return send {cursor: opData.cursor}
+          return send {doc: docName, cursor: opData.cursor}
 
         opMsg =
           doc: docName

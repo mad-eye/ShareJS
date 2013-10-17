@@ -82,10 +82,10 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   # to prevent an infinite typing loop.
   suppress = false
   
-  clearConnections = =>
-    return unless @connections
+  clearConnections = ->
+    return unless doc.connections
     currentConnectionIds = []
-    for connectionId, connection of @connections
+    for connectionId, connection of doc.connections
       #Remove old selection
       editor.session.removeMarker connection.marker if connection.marker
       editor.session.removeGutterDecoration connection.position.row, "foreign_selection_#{connection.index}"
@@ -99,14 +99,14 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   #  position (share position, cursor[1])ls
   #  marker (for selection)
   #
-  updateCursors = =>
+  updateCursors = ->
     clearConnections()
-    @connections = {}
+    doc.connections = {}
     ranges = []
     #Keep track of sesionId:index for cursor color
     connectionIds = []
-    for own connectionId, cursor of @cursors
-      @connections[connectionId] = connection = {}
+    for own connectionId, cursor of doc.cursors
+      doc.connections[connectionId] = connection = {}
       connection.cursor = cursor
       range = cursorToRange(editorDoc, cursor)
       #Selections
@@ -147,10 +147,6 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     cursor = rangeToCursor editorDoc, editor.getSelectionRange()
     doc.setCursor cursor
 
-  @on "cursors", updateCursors
-  editorDoc.on 'change', editorListener
-  editor.on "changeSelection", cursorListener
-
   # Listen for remote ops on the sharejs document
   docListener = (op) ->
     suppress = true
@@ -161,22 +157,33 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   offsetToPos = (offset) ->
     editorDoc.indexToPosition offset
 
-  doc.on 'insert', (pos, text) ->
+  insertListener = (pos, text) ->
     suppress = true
     editorDoc.insert offsetToPos(pos), text
     suppress = false
     check()
 
-  doc.on 'delete', (pos, text) ->
+  deleteListener = (pos, text) ->
     suppress = true
     range = Range.fromPoints offsetToPos(pos), offsetToPos(pos + text.length)
     editorDoc.remove range
     suppress = false
     check()
 
+  doc.on "cursors", updateCursors
+  doc.on 'delete', deleteListener
+  doc.on 'insert', insertListener
+
+  editorDoc.on 'change', editorListener
+  editor.on "changeSelection", cursorListener
+
+
   doc.detach_ace = ->
+    #TODO: Hide cursor from other viewers
     doc.removeListener 'remoteop', docListener
     doc.removeListener 'cursors', updateCursors
+    doc.removeListener 'insert', insertListener
+    doc.removeListener 'delete', deleteListener
     editorDoc.removeListener 'change', editorListener
     editor.removeListener 'changeSelection', cursorListener
     delete doc.detach_ace

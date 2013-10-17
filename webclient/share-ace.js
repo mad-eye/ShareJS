@@ -61,8 +61,7 @@
   };
 
   window.sharejs.extendDoc('attach_ace', function(editor, keepEditorContents) {
-    var check, clearConnections, cursorListener, doc, docListener, editorDoc, editorListener, offsetToPos, suppress, updateCursors,
-      _this = this;
+    var check, clearConnections, cursorListener, deleteListener, doc, docListener, editorDoc, editorListener, insertListener, offsetToPos, suppress, updateCursors;
     this.editorAttached = true;
     if (!this.provides['text']) {
       throw new Error('Only text documents can be attached to ace');
@@ -96,11 +95,11 @@
     suppress = false;
     clearConnections = function() {
       var connection, connectionId, currentConnectionIds, _ref;
-      if (!_this.connections) {
+      if (!doc.connections) {
         return;
       }
       currentConnectionIds = [];
-      _ref = _this.connections;
+      _ref = doc.connections;
       for (connectionId in _ref) {
         connection = _ref[connectionId];
         if (connection.marker) {
@@ -114,14 +113,14 @@
     updateCursors = function() {
       var connection, connectionId, connectionIds, cursor, cursorElement, cursorLayer, i, index, ownCursor, range, ranges, _i, _len, _ref, _ref1;
       clearConnections();
-      _this.connections = {};
+      doc.connections = {};
       ranges = [];
       connectionIds = [];
-      _ref = _this.cursors;
+      _ref = doc.cursors;
       for (connectionId in _ref) {
         if (!__hasProp.call(_ref, connectionId)) continue;
         cursor = _ref[connectionId];
-        _this.connections[connectionId] = connection = {};
+        doc.connections[connectionId] = connection = {};
         connection.cursor = cursor;
         range = cursorToRange(editorDoc, cursor);
         connection.index = sharejs.getIndexForConnection(connectionId);
@@ -161,9 +160,6 @@
       cursor = rangeToCursor(editorDoc, editor.getSelectionRange());
       return doc.setCursor(cursor);
     };
-    this.on("cursors", updateCursors);
-    editorDoc.on('change', editorListener);
-    editor.on("changeSelection", cursorListener);
     docListener = function(op) {
       suppress = true;
       applyToDoc(editorDoc, op);
@@ -173,23 +169,30 @@
     offsetToPos = function(offset) {
       return editorDoc.indexToPosition(offset);
     };
-    doc.on('insert', function(pos, text) {
+    insertListener = function(pos, text) {
       suppress = true;
       editorDoc.insert(offsetToPos(pos), text);
       suppress = false;
       return check();
-    });
-    doc.on('delete', function(pos, text) {
+    };
+    deleteListener = function(pos, text) {
       var range;
       suppress = true;
       range = Range.fromPoints(offsetToPos(pos), offsetToPos(pos + text.length));
       editorDoc.remove(range);
       suppress = false;
       return check();
-    });
+    };
+    doc.on("cursors", updateCursors);
+    doc.on('delete', deleteListener);
+    doc.on('insert', insertListener);
+    editorDoc.on('change', editorListener);
+    editor.on("changeSelection", cursorListener);
     doc.detach_ace = function() {
       doc.removeListener('remoteop', docListener);
       doc.removeListener('cursors', updateCursors);
+      doc.removeListener('insert', insertListener);
+      doc.removeListener('delete', deleteListener);
       editorDoc.removeListener('change', editorListener);
       editor.removeListener('changeSelection', cursorListener);
       delete doc.detach_ace;
