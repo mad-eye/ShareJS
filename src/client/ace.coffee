@@ -19,7 +19,6 @@ applyToShareJS = (editorDoc, delta, doc) ->
   # Get the start position of the range, in no. of characters
 
   pos = rangeToCursor(editorDoc, delta.range)[0]
-  pos = getStartOffsetPosition(delta.range)
   switch delta.action
     when 'insertText' then doc.insert pos, delta.text
     when 'removeText' then doc.del pos, delta.text.length

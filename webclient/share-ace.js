@@ -27,7 +27,6 @@
   applyToShareJS = function(editorDoc, delta, doc) {
     var pos, text;
     pos = rangeToCursor(editorDoc, delta.range)[0];
-    pos = getStartOffsetPosition(delta.range);
     switch (delta.action) {
       case 'insertText':
         doc.insert(pos, delta.text);
