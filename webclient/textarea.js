@@ -142,6 +142,9 @@
       if (elem.scrollTop !== scrollTop) {
         elem.scrollTop = scrollTop;
       }
+      if (window.document.activeElement === elem) {
+        elem.selectionStart = newSelection[0], elem.selectionEnd = newSelection[1];
+      }
       if (typeof doc.cursor === 'number') {
         return elem.selectionStart = elem.selectionEnd = doc.cursor;
       } else {

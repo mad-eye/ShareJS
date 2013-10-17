@@ -1,6 +1,7 @@
 # This is some utility code to connect an ace editor to a sharejs document.
 
-Range = require("ace/range").Range
+requireImpl = if ace.require? then ace.require else require
+Range = requireImpl("ace/range").Range
 
 rangeToCursor = (editorDoc, range) ->
   return [editorDoc.positionToIndex(range.start), editorDoc.positionToIndex(range.end)]
@@ -18,7 +19,7 @@ applyToShareJS = (editorDoc, delta, doc) ->
   # Get the start position of the range, in no. of characters
 
   pos = rangeToCursor(editorDoc, delta.range)[0]
-
+  pos = getStartOffsetPosition(delta.range)
   switch delta.action
     when 'insertText' then doc.insert pos, delta.text
     when 'removeText' then doc.del pos, delta.text.length
@@ -147,6 +148,32 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     cursor = rangeToCursor editorDoc, editor.getSelectionRange()
     doc.setCursor cursor
 
+  replaceTokenizer = () ->
+    oldTokenizer = editor.getSession().getMode().getTokenizer()
+    oldGetLineTokens = oldTokenizer.getLineTokens
+    oldTokenizer.getLineTokens = (line, state) ->
+      if not state? or typeof state == "string" # first line
+        cIter = doc.createIterator(0)
+        state =
+          modeState : state
+      else
+        cIter = doc.cloneIterator(state.iter)
+        doc.consumeIterator(cIter, 1) # consume the \n from previous line
+
+      modeTokens = oldGetLineTokens.apply(oldTokenizer, [line, state.modeState])
+      docTokens = doc.consumeIterator(cIter, line.length)
+      if (docTokens.text != line)
+        return modeTokens
+
+      return {
+        tokens : doc.mergeTokens(docTokens, modeTokens.tokens)
+        state :
+          modeState : modeTokens.state
+          iter : doc.cloneIterator(cIter)
+      }
+
+  replaceTokenizer() if doc.getAttributes?
+
   # Listen for remote ops on the sharejs document
   docListener = (op) ->
     suppress = true
@@ -157,13 +184,13 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
   offsetToPos = (offset) ->
     editorDoc.indexToPosition offset
 
-  insertListener = (pos, text) ->
+  doc.on 'insert', insertListener = (pos, text) ->
     suppress = true
     editorDoc.insert offsetToPos(pos), text
     suppress = false
     check()
 
-  deleteListener = (pos, text) ->
+  doc.on 'delete', deleteListener = (pos, text) ->
     suppress = true
     range = Range.fromPoints offsetToPos(pos), offsetToPos(pos + text.length)
     editorDoc.remove range
@@ -171,19 +198,21 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     check()
 
   doc.on "cursors", updateCursors
-  doc.on 'delete', deleteListener
-  doc.on 'insert', insertListener
-
   editorDoc.on 'change', editorListener
   editor.on "changeSelection", cursorListener
 
 
+  doc.on 'refresh', refreshListener = (startoffset, length) ->
+    range = Range.fromPoints offsetToPos(startoffset), offsetToPos(startoffset + length)
+    editor.getSession().bgTokenizer.start(range.start.row)
+
   doc.detach_ace = ->
     #TODO: Hide cursor from other viewers
-    doc.removeListener 'remoteop', docListener
     doc.removeListener 'cursors', updateCursors
     doc.removeListener 'insert', insertListener
     doc.removeListener 'delete', deleteListener
+    doc.removeListener 'remoteop', docListener
+    doc.removeListener 'refresh', refreshListener
     editorDoc.removeListener 'change', editorListener
     editor.removeListener 'changeSelection', cursorListener
     delete doc.detach_ace
