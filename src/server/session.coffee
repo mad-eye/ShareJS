@@ -362,5 +362,7 @@ exports.handler = (session, createAgent) ->
       return unless agent
       #console.log "Client #{agent.sessionId} disconnected"
       for docName, {listener} of docState
+        #Remove cursor
+        agent.updateCursor docName, null
         agent.removeListener docName if listener
       docState = null
