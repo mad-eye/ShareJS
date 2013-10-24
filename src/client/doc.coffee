@@ -291,7 +291,8 @@ class Doc
   flushCursor: =>
     return if @cursorDirty == false or @inflightOp
 
-    @connection.send {doc:@name, cursor:@cursor, v:@version}
+    cursor = if @suppressCursor then null else @cursor
+    @connection.send {doc:@name, cursor:cursor, v:@version}
     @cursorDirty = false
 
   # Submit an op to the server. The op maybe held for a little while before being sent, as only one

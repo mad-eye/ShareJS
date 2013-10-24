@@ -64,13 +64,14 @@
 
   window.sharejs.extendDoc('attach_ace', function(editor, keepEditorContents) {
     var check, clearConnections, cursorListener, deleteListener, doc, docListener, editorDoc, editorListener, insertListener, offsetToPos, refreshListener, replaceTokenizer, suppress, updateCursors;
-    this.editorAttached = true;
     if (!this.provides['text']) {
       throw new Error('Only text documents can be attached to ace');
     }
     doc = this;
     editorDoc = editor.getSession().getDocument();
     editorDoc.setNewLineMode('unix');
+    doc.editorAttached = true;
+    doc.suppressCursor = false;
     check = function() {
       var _this = this;
       return window.setTimeout(function() {
@@ -226,6 +227,9 @@
       return editor.getSession().bgTokenizer.start(range.start.row);
     });
     doc.detach_ace = function() {
+      doc.suppressCursor = true;
+      doc.cursorDirty = true;
+      doc.flushCursor();
       doc.removeListener('cursors', updateCursors);
       doc.removeListener('insert', insertListener);
       doc.removeListener('delete', deleteListener);
@@ -235,7 +239,7 @@
       editor.removeListener('changeSelection', cursorListener);
       delete doc.detach_ace;
       clearConnections();
-      return this.editorAttached = false;
+      return doc.editorAttached = false;
     };
   });
 

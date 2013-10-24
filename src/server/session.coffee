@@ -109,7 +109,7 @@ exports.handler = (session, createAgent) ->
         else if query.op? or query.meta?.path?
           handleOp query, callback
 
-        else if query.cursor?
+        else if typeof query.cursor != 'undefined'
           updateCursor query, callback
 
         else

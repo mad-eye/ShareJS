@@ -48,12 +48,14 @@ addCursorColorIndex = (cursorElement, index) ->
 # with the document's contents unless keepEditorContents is true. (In which case the document's
 # contents are nuked and replaced with the editor's).
 window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
-  @editorAttached = true
   throw new Error 'Only text documents can be attached to ace' unless @provides['text']
 
   doc = this
   editorDoc = editor.getSession().getDocument()
   editorDoc.setNewLineMode 'unix'
+
+  doc.editorAttached = true
+  doc.suppressCursor = false
 
   check = ->
     window.setTimeout =>
@@ -206,7 +208,11 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     editor.getSession().bgTokenizer.start(range.start.row)
 
   doc.detach_ace = ->
-    #TODO: Hide cursor from other viewers
+    #Hide cursor from other viewers
+    doc.suppressCursor = true
+    doc.cursorDirty = true
+    doc.flushCursor()
+    #Remove listeners
     doc.removeListener 'cursors', updateCursors
     doc.removeListener 'insert', insertListener
     doc.removeListener 'delete', deleteListener
@@ -216,7 +222,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
     editor.removeListener 'changeSelection', cursorListener
     delete doc.detach_ace
     clearConnections()
-    @editorAttached = false
+    doc.editorAttached = false
 
   return
 

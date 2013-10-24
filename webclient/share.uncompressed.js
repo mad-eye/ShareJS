@@ -743,12 +743,14 @@
     };
 
     Doc.prototype.flushCursor = function() {
+      var cursor;
       if (this.cursorDirty === false || this.inflightOp) {
         return;
       }
+      cursor = this.suppressCursor ? null : this.cursor;
       this.connection.send({
         doc: this.name,
-        cursor: this.cursor,
+        cursor: cursor,
         v: this.version
       });
       return this.cursorDirty = false;
