@@ -509,7 +509,7 @@ module.exports = Model = (db, options) ->
 
   @updateCursor = (docName, sessionId, cursorData, callback)->
     load docName, (error, doc) ->
-      return callback error if error
+      return callback? error if error
       doc.cursors ?= {}
       doc.cursors[sessionId] = cursorData
       data = {}
