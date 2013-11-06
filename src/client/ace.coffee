@@ -24,11 +24,13 @@ applyToShareJS = (editorDoc, delta, doc) ->
     when 'removeText' then doc.del pos, delta.text.length
     
     when 'insertLines'
-      text = delta.lines.join('\n') + '\n'
+      nl = editorDoc.getNewLineCharacter()
+      text = delta.lines.join(nl) + nl
       doc.insert pos, text
       
     when 'removeLines'
-      text = delta.lines.join('\n') + '\n'
+      nl = delta.nl
+      text = delta.lines.join(nl) + nl
       doc.del pos, text.length
 
     else throw new Error "unknown action: #{delta.action}"
@@ -52,7 +54,7 @@ window.sharejs.extendDoc 'attach_ace', (editor, keepEditorContents) ->
 
   doc = this
   editorDoc = editor.getSession().getDocument()
-  editorDoc.setNewLineMode 'unix'
+  editorDoc.setNewLineMode 'auto'
 
   doc.editorAttached = true
   doc.suppressCursor = false
